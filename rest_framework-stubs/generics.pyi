@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import Any, Protocol, TypeVar
+from typing import Any, Protocol, TypeVar, type_check_only
 
 from django.db.models import Manager, Model
 from django.db.models.query import QuerySet
@@ -18,6 +18,7 @@ def get_object_or_404(
     queryset: type[_MT_co] | Manager[_MT_co] | QuerySet[_MT_co], *filter_args: Any, **filter_kwargs: Any
 ) -> _MT_co: ...
 
+@type_check_only
 class UsesQuerySet(Protocol[_MT_co]):
     def get_queryset(self) -> QuerySet[_MT_co]: ...
 
@@ -30,15 +31,15 @@ class BaseFilterProtocol(Protocol[_MT_inv]):
 
 class GenericAPIView(views.APIView, UsesQuerySet[_MT_co]):
     queryset: QuerySet[_MT_co] | Manager[_MT_co] | None
-    serializer_class: type[BaseSerializer[_MT_co]] | None
+    serializer_class: type[BaseSerializer] | None
     lookup_field: str
     lookup_url_kwarg: str | None
     filter_backends: Sequence[type[BaseFilterBackend | BaseFilterProtocol[_MT_co]]]
     pagination_class: type[BasePagination] | None
     def __class_getitem__(cls, *args: Any, **kwargs: Any) -> type[Self]: ...
     def get_object(self) -> _MT_co: ...
-    def get_serializer(self, *args: Any, **kwargs: Any) -> BaseSerializer[_MT_co]: ...
-    def get_serializer_class(self) -> type[BaseSerializer[_MT_co]]: ...
+    def get_serializer(self, *args: Any, **kwargs: Any) -> BaseSerializer: ...
+    def get_serializer_class(self) -> type[BaseSerializer]: ...
     def get_serializer_context(self) -> dict[str, Any]: ...
     def filter_queryset(self, queryset: QuerySet[_MT_co]) -> QuerySet[_MT_co]: ...
     @property
